@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 /**
  * Protège les écritures de l'API.
  * <p>
- * Toute requête qui modifie des données sous {@code /api} doit porter l'en-tête
+ * Toute requête qui n'est pas une lecture (GET, HEAD, OPTIONS) doit porter l'en-tête
  * {@code Authorization: Bearer <jeton>}. Le navigateur n'ajoute jamais cet en-tête de lui-même :
  * un autre site ne peut donc pas déclencher une écriture à l'insu de l'administrateur.
  * Sans jeton configuré, toutes les écritures sont refusées.
@@ -41,7 +41,12 @@ public class JetonAdministration extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest requete) {
-        return !requete.getRequestURI().startsWith("/api/") || LECTURES.contains(requete.getMethod());
+        // Refus par défaut : toute requête qui n'est pas une lecture exige le jeton, quel que soit son chemin.
+        // On ne cherche pas à reconnaître « /api/ » dans l'adresse : une adresse déformée (point-virgule,
+        // encodage) pourrait être lue autrement ici que par le routage.
+        // Seule exception, comparée à l'identique : l'API GraphQL, qui ne propose que des lectures.
+        return LECTURES.contains(requete.getMethod())
+                || ("POST".equals(requete.getMethod()) && "/graphql".equals(requete.getRequestURI()));
     }
 
     @Override
