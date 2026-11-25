@@ -10,4 +10,6 @@ WORKDIR /opt/fuseki
 EXPOSE 3030
 # Base TDB2 persistante, service « /annuaire », mises à jour SPARQL autorisées.
 # Le port n'est pas publié hors du réseau Docker : seule l'application y accède.
-ENTRYPOINT ["java", "-Xmx512m", "-jar", "fuseki-server.jar", "--tdb2", "--loc=/donnees", "--update", "/annuaire"]
+# Dossier de travail de Fuseki dans le volume : le compte du service ne peut pas écrire sous /opt.
+ENV FUSEKI_BASE=/donnees/run
+ENTRYPOINT ["java", "-Xmx512m", "-jar", "fuseki-server.jar", "--tdb2", "--loc=/donnees/base", "--update", "/annuaire"]
