@@ -34,7 +34,8 @@ jobs:
       - name: Attendre l'application
         run: |
           for i in $(seq 1 60); do
-            curl -fs http://127.0.0.1:8096/api/domaines | grep -q nautisme && exit 0
+            # Les widgets sont créés en dernier : leur présence marque la fin du chargement des données d'exemple.
+            curl -fs http://127.0.0.1:8096/api/widgets | grep -q '"type":"carte"' && exit 0
             sleep 5
           done
           docker compose -f deploiement/docker-compose.yml logs --tail 80
