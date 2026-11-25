@@ -34,3 +34,6 @@ build/
 
 # Données locales
 donnees/
+
+# Interface Angular construite (source : admin/)
+src/main/resources/static/admin/

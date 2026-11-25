@@ -13,6 +13,7 @@ Ce n'est pas un produit. Les sociétés des données d'exemple sont fictives.
 - **Recherche.** Plein texte en français, filtres exacts et décompte par facette. Un champ ajouté par un administrateur devient aussitôt cherchable et, s'il l'a demandé, filtrable.
 - **Deux API sur les mêmes services.** REST pour lire et écrire, GraphQL en lecture.
 - **Widgets.** Annuaire ou carte, configurés dans l'application, posés sur un autre site par une balise. Le widget ne reçoit que les champs que l'administrateur a choisi de publier, et seulement sur les sites qu'il a autorisés.
+- **Interface d'administration** en Angular : domaines et champs, fiches (le formulaire est construit à partir des champs définis dans l'ontologie), widgets.
 - **Source externe.** Préremplissage d'une fiche à partir du répertoire Sirene, par l'API publique « Recherche d'entreprises ».
 
 ## Architecture
@@ -41,6 +42,7 @@ Ce n'est pas un produit. Les sociétés des données d'exemple sont fictives.
 | Index, facettes, gabarit dynamique | `src/main/java/fr/annuaire/recherche/IndexRecherche.java` |
 | API REST et protection des écritures | `src/main/java/fr/annuaire/api/` |
 | Schéma GraphQL | `src/main/resources/graphql/schema.graphqls` |
+| Interface d'administration (Angular 21) | `admin/src/app/` |
 | Widget (composant web, sans dépendance) | `src/main/resources/static/widget.js` |
 | Connecteur Sirene | `src/main/java/fr/annuaire/sources/ConnecteurSirene.java` |
 
@@ -67,6 +69,7 @@ set ANNUAIRE_ADMIN_JETON=un-jeton-de-16-caracteres-au-moins
 mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--annuaire.exemple=true"
 ```
 
+- Interface d'administration : http://localhost:8096/admin/ (à construire d'abord : `cd admin`, `npm ci`, `npx ng build`)
 - Page d'un faux site partenaire avec les deux widgets : http://localhost:8096/demo.html
 - Console GraphQL : http://localhost:8096/graphiql
 
@@ -115,7 +118,6 @@ curl -X POST http://localhost:8096/api/entites ^
 
 ## Limites connues
 
-- Pas d'interface d'administration : les écritures se font par l'API. Une interface Angular est prévue.
 - Pas de comptes ni de droits par domaine : un seul jeton d'administration.
 - Les champs de domaine ont trois types (texte, nombre, oui/non) et une seule valeur.
 - En mode Fuseki, chaque opération ouvre une connexion HTTP : le chargement en masse est lent.
@@ -123,4 +125,4 @@ curl -X POST http://localhost:8096/api/entites ^
 
 ## Technique
 
-Java 21, Spring Boot 4, Apache Jena 6 (TDB2, Fuseki, SHACL), Elasticsearch 9, PostgreSQL 18, Flyway, Spring GraphQL. Licence MIT.
+Java 21, Spring Boot 4, Angular 21, Apache Jena 6 (TDB2, Fuseki, SHACL), Elasticsearch 9, PostgreSQL 18, Flyway, Spring GraphQL. Licence MIT.

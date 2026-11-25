@@ -20,6 +20,20 @@ jobs:
           cache: maven
       - run: ./mvnw -B verify
 
+  interface:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+      - working-directory: admin
+        run: |
+          npm ci
+          npx ng build
+
   # Monte les quatre services (Fuseki, Elasticsearch, PostgreSQL, application) et interroge chaque interface.
   docker:
     runs-on: ubuntu-latest
@@ -56,6 +70,9 @@ jobs:
         run: |
           curl -fs -X POST -H 'Content-Type: application/json' \
             -d '{"query":"{ domaines { id champs { id } } }"}' http://127.0.0.1:8096/graphql | grep -q nautisme-activite
+      - name: Interface d'administration servie
+        run: |
+          curl -fs http://127.0.0.1:8096/admin/ | grep -q '<app-root>'
       - name: Widget
         run: |
           ID=$(curl -fs http://127.0.0.1:8096/api/widgets | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
