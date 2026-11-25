@@ -4,6 +4,8 @@ Démonstrateur personnel : un annuaire d'entreprises dont la structure des fiche
 
 Il réunit dans une petite application les techniques d'une plateforme de données sémantiques : base RDF interrogée en SPARQL, validation SHACL, index Elasticsearch, API REST et GraphQL, widgets intégrables dans un site tiers, connecteur vers une source externe.
 
+Démonstration en ligne : https://directory.tikoad-services.info (interface d'administration) et https://directory.tikoad-services.info/demo.html (les widgets dans la page d'un faux site partenaire). La consultation est libre ; les modifications demandent un jeton.
+
 Ce n'est pas un produit. Les sociétés des données d'exemple sont fictives.
 
 ## Ce qu'il fait
