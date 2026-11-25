@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page d'un site partenaire (démonstration)</title>
+  <style>
+    body { margin: 0; font: 16px/1.5 Georgia, serif; background: #faf7f2; color: #2b2520; }
+    header { background: #6b3f2a; color: #fff; padding: 22px 0; }
+    main, header div { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+    h1 { margin: 0; font-size: 26px; }
+    h2 { margin-top: 36px; }
+    p.note { color: #6b6259; font-size: 14px; }
+    pre { background: #2b2520; color: #f3ede4; padding: 12px 14px; border-radius: 4px; overflow-x: auto; font-size: 13px; }
+  </style>
+  <script src="widget.js" defer></script>
+</head>
+<body>
+<header><div><h1>Site d'un partenaire</h1></div></header>
+<main>
+  <p>Cette page tient lieu de site partenaire : ses styles n'ont rien à voir avec ceux de l'application.
+    Chaque widget ci-dessous est posé par une seule balise. Son contenu est réglé dans l'application, pas ici.</p>
+  <p class="note" id="vide" hidden>Aucun widget n'est encore configuré.</p>
+  <div id="widgets"></div>
+</main>
+<script>
+  // La page liste les widgets existants pour la démonstration ; un vrai site écrit la balise en dur.
+  fetch('api/widgets').then(r => r.json()).then(widgets => {
+    document.getElementById('vide').hidden = widgets.length > 0;
+    const zone = document.getElementById('widgets');
+    for (const w of widgets) {
+      const titre = document.createElement('h2');
+      titre.textContent = w.nom;
+      const code = document.createElement('pre');
+      code.textContent = `<script src="${location.origin}/widget.js" defer><\/script>\n<annuaire-widget widget="${w.id}"></annuaire-widget>`;
+      const balise = document.createElement('annuaire-widget');
+      balise.setAttribute('widget', w.id);
+      zone.append(titre, code, balise);
+    }
+  });
+</script>
+</body>
+</html>

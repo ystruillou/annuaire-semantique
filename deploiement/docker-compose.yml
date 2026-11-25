@@ -1,0 +1,66 @@
+# Les quatre services du démonstrateur. Lancement : docker compose up -d --build
+# Variables à définir dans un fichier .env à côté de celui-ci (voir .env.exemple).
+services:
+  fuseki:
+    build:
+      context: .
+      dockerfile: Dockerfile.fuseki
+    volumes:
+      - rdf:/donnees
+    restart: unless-stopped
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.6
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    volumes:
+      - index:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      retries: 30
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: annuaire
+      POSTGRES_USER: annuaire
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?définir POSTGRES_PASSWORD}
+    volumes:
+      - sql:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U annuaire -d annuaire"]
+      interval: 5s
+      retries: 30
+    restart: unless-stopped
+
+  application:
+    build:
+      context: ..
+      dockerfile: deploiement/Dockerfile
+    environment:
+      ANNUAIRE_FUSEKI: http://fuseki:3030/annuaire
+      ANNUAIRE_ELASTICSEARCH: http://elasticsearch:9200
+      ANNUAIRE_ADMIN_JETON: ${ANNUAIRE_ADMIN_JETON:?définir ANNUAIRE_ADMIN_JETON}
+      ANNUAIRE_EXEMPLE: ${ANNUAIRE_EXEMPLE:-false}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/annuaire
+      SPRING_DATASOURCE_USERNAME: annuaire
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      fuseki:
+        condition: service_started
+      elasticsearch:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8096:8096"
+    restart: unless-stopped
+
+volumes:
+  rdf:
+  index:
+  sql:

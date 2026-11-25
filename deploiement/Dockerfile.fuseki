@@ -1,0 +1,13 @@
+# Serveur Apache Jena Fuseki, construit à partir de la distribution officielle.
+FROM eclipse-temurin:21-jre
+ARG FUSEKI_VERSION=6.1.0
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
+ && curl -fsSL https://archive.apache.org/dist/jena/binaries/apache-jena-fuseki-${FUSEKI_VERSION}.tar.gz | tar xz -C /opt \
+ && mv /opt/apache-jena-fuseki-${FUSEKI_VERSION} /opt/fuseki \
+ && useradd --system --create-home fuseki && mkdir -p /donnees && chown fuseki /donnees
+USER fuseki
+WORKDIR /opt/fuseki
+EXPOSE 3030
+# Base TDB2 persistante, service « /annuaire », mises à jour SPARQL autorisées.
+# Le port n'est pas publié hors du réseau Docker : seule l'application y accède.
+ENTRYPOINT ["java", "-Xmx512m", "-jar", "fuseki-server.jar", "--tdb2", "--loc=/donnees", "--update", "/annuaire"]

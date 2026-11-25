@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - run: ./mvnw -B verify
+
+  # Monte les quatre services (Fuseki, Elasticsearch, PostgreSQL, application) et interroge chaque interface.
+  docker:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - uses: actions/checkout@v4
+      - name: Démarrer les services
+        working-directory: deploiement
+        run: |
+          printf 'POSTGRES_PASSWORD=ci-mot-de-passe\nANNUAIRE_ADMIN_JETON=ci-jeton-administration\nANNUAIRE_EXEMPLE=true\n' > .env
+          docker compose up -d --build
+      - name: Attendre l'application
+        run: |
+          for i in $(seq 1 60); do
+            curl -fs http://127.0.0.1:8096/api/domaines | grep -q nautisme && exit 0
+            sleep 5
+          done
+          docker compose -f deploiement/docker-compose.yml logs --tail 80
+          exit 1
+      - name: Recherche (Elasticsearch)
+        run: curl -fs 'http://127.0.0.1:8096/api/recherche?q=voilerie&domaine=nautisme' | grep -q '"total":2'
+      - name: Écriture refusée sans jeton
+        run: test "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{"libelle":"X"}' http://127.0.0.1:8096/api/domaines)" = 401
+      - name: Ajout d'un champ puis refus SHACL
+        run: |
+          curl -fs -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer ci-jeton-administration' \
+            -d '{"libelle":"Label","type":"TEXTE","facette":true}' http://127.0.0.1:8096/api/domaines/nautisme/champs | grep -q nautisme-label
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer ci-jeton-administration' \
+            -d '{"nom":"Test","domaines":["nautisme"],"champs":{"nautisme-effectif":"beaucoup"}}' http://127.0.0.1:8096/api/entites)" = 422
+      - name: GraphQL
+        run: |
+          curl -fs -X POST -H 'Content-Type: application/json' \
+            -d '{"query":"{ domaines { id champs { id } } }"}' http://127.0.0.1:8096/graphql | grep -q nautisme-activite
+      - name: Widget
+        run: |
+          ID=$(curl -fs http://127.0.0.1:8096/api/widgets | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+          curl -fs "http://127.0.0.1:8096/widget/$ID/donnees" | grep -q '"total":8'

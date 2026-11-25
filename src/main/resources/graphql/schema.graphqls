@@ -1,0 +1,62 @@
+type Query {
+  "Les domaines d'intérêt et leurs champs, tels que les administrateurs les ont définis."
+  domaines: [Domaine!]!
+  entite(id: ID!): Entite
+  "Recherche plein texte, avec filtres exacts et décompte par facette."
+  recherche(texte: String, domaine: ID, filtres: [Filtre!], page: Int, taille: Int): Resultat!
+}
+
+enum TypeChamp { TEXTE NOMBRE OUI_NON }
+
+type Champ {
+  id: ID!
+  libelle: String!
+  type: TypeChamp!
+  facette: Boolean!
+  ordre: Int!
+}
+
+type Domaine {
+  id: ID!
+  libelle: String!
+  champs: [Champ!]!
+}
+
+type ValeurChamp {
+  champ: ID!
+  valeur: String!
+}
+
+type Entite {
+  id: ID!
+  nom: String!
+  siren: String
+  commune: String
+  codePostal: String
+  latitude: Float
+  longitude: Float
+  domaines: [ID!]!
+  champs: [ValeurChamp!]!
+}
+
+input Filtre {
+  champ: ID!
+  valeur: String!
+}
+
+type ValeurFacette {
+  valeur: String!
+  nombre: Int!
+}
+
+type Facette {
+  champ: ID!
+  libelle: String!
+  valeurs: [ValeurFacette!]!
+}
+
+type Resultat {
+  total: Int!
+  entites: [Entite!]!
+  facettes: [Facette!]!
+}
