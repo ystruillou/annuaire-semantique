@@ -77,3 +77,26 @@ jobs:
         run: |
           ID=$(curl -fs http://127.0.0.1:8096/api/widgets | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
           curl -fs "http://127.0.0.1:8096/widget/$ID/donnees" | grep -q '"total":8'
+
+  # Mise en ligne : seulement pour un push sur main, une fois les contrôles passés.
+  # La clé ne permet qu'une chose sur le serveur : lancer le script de déploiement de cette application,
+  # qui met à jour le code, reconstruit, vérifie la santé du service et revient en arrière en cas d'échec.
+  deploiement:
+    needs: [tests, interface, docker]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploiement
+      cancel-in-progress: false
+    steps:
+      - name: Déployer sur le serveur
+        env:
+          CLE: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOTES: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          SERVEUR: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$CLE" > ~/.ssh/cle
+          chmod 600 ~/.ssh/cle
+          printf '%s\n' "$HOTES" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/cle -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "deploy@$SERVEUR" deployer
