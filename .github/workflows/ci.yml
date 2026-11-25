@@ -40,9 +40,11 @@ jobs:
           docker compose -f deploiement/docker-compose.yml logs --tail 80
           exit 1
       - name: Recherche (Elasticsearch)
-        run: curl -fs 'http://127.0.0.1:8096/api/recherche?q=voilerie&domaine=nautisme' | grep -q '"total":2'
+        run: |
+          curl -fs 'http://127.0.0.1:8096/api/recherche?q=voilerie&domaine=nautisme' | grep -q '"total":2'
       - name: Écriture refusée sans jeton
-        run: test "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{"libelle":"X"}' http://127.0.0.1:8096/api/domaines)" = 401
+        run: |
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{"libelle":"X"}' http://127.0.0.1:8096/api/domaines)" = 401
       - name: Ajout d'un champ puis refus SHACL
         run: |
           curl -fs -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer ci-jeton-administration' \
