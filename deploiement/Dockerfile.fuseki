@@ -4,7 +4,7 @@ ARG FUSEKI_VERSION=6.1.0
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
  && curl -fsSL https://archive.apache.org/dist/jena/binaries/apache-jena-fuseki-${FUSEKI_VERSION}.tar.gz | tar xz -C /opt \
  && mv /opt/apache-jena-fuseki-${FUSEKI_VERSION} /opt/fuseki \
- && useradd --system --create-home fuseki && mkdir -p /donnees && chown fuseki /donnees
+ && useradd --system --create-home fuseki && mkdir -p /donnees/base /donnees/run && chown -R fuseki /donnees
 USER fuseki
 WORKDIR /opt/fuseki
 EXPOSE 3030

@@ -7,6 +7,10 @@ services:
       dockerfile: Dockerfile.fuseki
     volumes:
       - rdf:/donnees
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs 'http://localhost:3030/$$/ping' || exit 1"]
+      interval: 5s
+      retries: 30
     restart: unless-stopped
 
   elasticsearch:
@@ -51,7 +55,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
     depends_on:
       fuseki:
-        condition: service_started
+        condition: service_healthy
       elasticsearch:
         condition: service_healthy
       postgres:
